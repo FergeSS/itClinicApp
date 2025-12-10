@@ -1,1 +1,1 @@
-![Схема экранов](images/scheme.png)
+![Схема экранов](images/scheme.svg)
