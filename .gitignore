@@ -17,3 +17,15 @@ captures
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
+
+# Report files
+report/
+report/**/*
+
+# Images/photos
+Фотки/
+Фотки/**/*
+
+# Registry
+Registry/
+Registry/**/*

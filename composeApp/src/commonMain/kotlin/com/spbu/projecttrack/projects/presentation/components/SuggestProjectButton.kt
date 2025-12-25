@@ -1,0 +1,67 @@
+package com.spbu.projecttrack.projects.presentation.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import com.spbu.projecttrack.core.theme.AppColors
+import org.jetbrains.compose.resources.Font
+import projecttrack.composeapp.generated.resources.*
+
+@Composable
+fun SuggestProjectButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
+    
+    Box(
+        modifier = modifier
+            .wrapContentWidth()
+            .height(40.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = RoundedCornerShape(20.dp),
+                ambientColor = Color.Black.copy(alpha = 0.15f),
+                spotColor = Color.Black.copy(alpha = 0.15f),
+                clip = false
+            )
+            .background(
+                color = AppColors.Color3,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .border(
+                width = 2.dp,
+                color = AppColors.BorderColor,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .clickable(
+                indication = null, // Убираем затемнение
+                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = "Предложить проект",
+            fontFamily = openSansSemiBold,
+            fontSize = 14.sp,
+            color = AppColors.White,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+    }
+}
+

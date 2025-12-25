@@ -1,0 +1,116 @@
+package com.spbu.projecttrack.projects.presentation.components
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.spbu.projecttrack.core.theme.AppColors
+import org.jetbrains.compose.resources.Font
+import org.jetbrains.compose.resources.painterResource
+import projecttrack.composeapp.generated.resources.*
+
+@Composable
+fun SearchBar(
+    searchText: String,
+    onSearchTextChange: (String) -> Unit,
+    onFilterClick: () -> Unit,
+    hasActiveFilters: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
+    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
+    
+    Box(
+        modifier = modifier
+            .width(375.dp)
+            .height(40.dp)
+            .background(
+                color = AppColors.White,
+                shape = RoundedCornerShape(20.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = AppColors.Color1,
+                shape = RoundedCornerShape(20.dp)
+            )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Лого поиска
+            Image(
+                painter = painterResource(Res.drawable.search_icon),
+                contentDescription = "Поиск",
+                modifier = Modifier.size(24.dp)
+            )
+            
+            // Поле ввода - одна строка
+            BasicTextField(
+                value = searchText,
+                onValueChange = onSearchTextChange,
+                modifier = Modifier.weight(1f),
+                singleLine = true, // Одна строка
+                textStyle = androidx.compose.ui.text.TextStyle(
+                    fontFamily = if (searchText.isEmpty()) openSansSemiBold else openSansRegular,
+                    fontSize = 16.sp,
+                    color = if (searchText.isEmpty()) AppColors.Color1 else AppColors.Color2
+                ),
+                decorationBox = { innerTextField ->
+                    if (searchText.isEmpty()) {
+                        Text(
+                            text = "Поиск",
+                            fontFamily = openSansSemiBold,
+                            fontSize = 16.sp,
+                            color = AppColors.Color1
+                        )
+                    }
+                    innerTextField()
+                }
+            )
+            
+            // Лого фильтров с индикатором (цвет 2)
+            Box(modifier = Modifier.size(24.dp)) {
+                Image(
+                    painter = painterResource(Res.drawable.filter_icon),
+                    contentDescription = "Фильтры",
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable(onClick = onFilterClick),
+                    colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(AppColors.Color2)
+                )
+                
+                // Индикатор активных фильтров
+                if (hasActiveFilters) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .background(
+                                color = AppColors.Color3,
+                                shape = CircleShape
+                            )
+                            .align(Alignment.TopEnd)
+                            .offset(x = 2.dp, y = (-2).dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
