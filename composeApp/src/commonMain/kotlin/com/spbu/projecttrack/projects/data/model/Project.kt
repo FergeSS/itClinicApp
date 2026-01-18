@@ -4,8 +4,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ProjectsResponse(
-    val projects: List<Project>,
-    val tags: List<Tag>
+    val projects: List<Project> = emptyList(),
+    val tags: List<Tag> = emptyList()
 )
 
 @Serializable

@@ -18,6 +18,16 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 node_modules/
 
+# Build configuration (содержит токены и ключи)
+**/BuildConfig.kt
+BuildConfig.kt
+composeApp/src/commonMain/kotlin/com/spbu/projecttrack/BuildConfig.kt
+
+# Environment variables
+.env
+.env.local
+*.env
+
 # Report files
 report/
 report/**/*

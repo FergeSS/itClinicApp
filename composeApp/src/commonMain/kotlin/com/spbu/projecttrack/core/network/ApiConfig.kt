@@ -1,29 +1,27 @@
 package com.spbu.projecttrack.core.network
 
+import com.spbu.projecttrack.BuildConfig
+
 /**
  * Конфигурация API эндпоинтов
  * 
- * Для переключения между локальным и продакшн бэкендом измените USE_LOCAL_API
+ * Настройки берутся из BuildConfig.kt
  */
 object ApiConfig {
-    // TODO: Установите в false для использования продакшн API
-    // IP адрес теперь определяется автоматически!
-    private const val USE_LOCAL_API = true
-    
-    // Продакшн бэкенд (публичный, без авторизации для большинства эндпоинтов)
-    private const val PRODUCTION_BASE_URL = "https://citec.spb.ru/api"
-    
-    // Порт локального бэкенда
-    private const val LOCAL_PORT = 8000
+    // Настройки API из BuildConfig
+    private val USE_LOCAL_API = BuildConfig.USE_LOCAL_API
+    private val PRODUCTION_BASE_URL = BuildConfig.PRODUCTION_BASE_URL
+    private val LOCAL_PORT = BuildConfig.LOCAL_PORT
     
     /**
      * Текущий базовый URL API
      * Автоматически определяет правильный адрес для эмулятора/реального устройства
+     * Поддерживает ручную настройку IP через NetworkSettings
      */
     val baseUrl: String
         get() = if (USE_LOCAL_API) {
-            // Автоматически определяем адрес в зависимости от типа устройства
-            val host = DeviceInfo.getLocalHostAddress()
+            // Используем пользовательский IP или автоматическое определение
+            val host = NetworkSettings.getEffectiveHostIP()
             "http://$host:$LOCAL_PORT"
         } else {
             PRODUCTION_BASE_URL

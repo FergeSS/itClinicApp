@@ -197,6 +197,31 @@ Kotlin Multiplatform (Android + iOS) приложение для IT‑клини
 
 ---
 
+## 🔐 Конфигурация для разработчиков
+
+> **Важно**: Перед первым запуском необходимо настроить конфигурацию безопасности!
+
+После клонирования репозитория:
+
+```bash
+# 1. Скопируйте шаблон конфигурации
+cd composeApp/src/commonMain/kotlin/com/spbu/projecttrack/
+cp BuildConfig.example.kt BuildConfig.kt
+
+# 2. Сгенерируйте тестовый токен (для локальной разработки)
+cd Registry/
+npm install jsonwebtoken
+node generate-test-token.js
+
+# 3. Вставьте полученный токен в BuildConfig.kt
+```
+
+Файл `BuildConfig.kt` содержит токены и ключи и **не коммитится в Git**.
+
+📖 Подробная инструкция: [composeApp/SECURITY_README.md](composeApp/SECURITY_README.md)
+
+---
+
 ## Сборка и запуск
 
 ### Требования
@@ -423,6 +448,31 @@ The project is a **Kotlin Multiplatform** targeting **Android** and **iOS**.
 ## Design
 
 - Figma: https://www.figma.com/design/Pac1BvaweGNNmjDnvW2ZdL/IT-CLINIC?node-id=0-1&p=f&t=Se6QVT4BCQxH8jUh-0
+
+---
+
+## 🔐 Developer Configuration
+
+> **Important**: Before first run, you need to set up security configuration!
+
+After cloning the repository:
+
+```bash
+# 1. Copy configuration template
+cd composeApp/src/commonMain/kotlin/com/spbu/projecttrack/
+cp BuildConfig.example.kt BuildConfig.kt
+
+# 2. Generate test token (for local development)
+cd Registry/
+npm install jsonwebtoken
+node generate-test-token.js
+
+# 3. Insert the obtained token into BuildConfig.kt
+```
+
+The `BuildConfig.kt` file contains tokens and keys and **is not committed to Git**.
+
+📖 Detailed instructions: [composeApp/SECURITY_README.md](composeApp/SECURITY_README.md)
 
 ---
 

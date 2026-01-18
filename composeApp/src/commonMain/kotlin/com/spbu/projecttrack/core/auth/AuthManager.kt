@@ -1,5 +1,6 @@
 package com.spbu.projecttrack.core.auth
 
+import com.spbu.projecttrack.BuildConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,16 +46,11 @@ object AuthManager {
     
     /**
      * Установить тестовый токен для разработки
-     * TODO: Удалить перед релизом!
-     * 
-     * ВНИМАНИЕ: Замените на ваш тестовый токен для локальной разработки
-     * Сгенерируйте токен на jwt.io с вашим TOKEN_SECRET из бэкенда
+     * Токен берется из BuildConfig.kt
      */
     fun setTestToken() {
-        // TODO: Замените на ваш тестовый токен
-        // Сгенерируйте на https://jwt.io с payload {"id": 1} и вашим TOKEN_SECRET
-        val testToken = "YOUR_TEST_TOKEN_HERE"
-        setToken(testToken)
+        setToken(BuildConfig.TEST_TOKEN)
+        println("🔑 Установлен тестовый токен для разработки")
     }
 }
 

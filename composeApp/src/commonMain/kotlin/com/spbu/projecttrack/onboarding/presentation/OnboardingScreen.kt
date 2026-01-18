@@ -1,6 +1,7 @@
 package com.spbu.projecttrack.onboarding.presentation
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -46,14 +47,16 @@ fun OnboardingScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .systemBarsPadding(),
+            .background(WhiteBackground), // Белый фон на весь экран включая статус-бар
         contentAlignment = Alignment.Center
     ) {
-        // Фон белый
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = WhiteBackground
-        ) {}
+        // Добавляем отступ для статус-бара на контент
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
+            contentAlignment = Alignment.Center
+        ) {
         
         // Герб СПбГУ с прозрачностью 50%
         Image(
@@ -153,7 +156,8 @@ fun OnboardingScreen(
             
             Spacer(modifier = Modifier.weight(1f))
         }
-    }
+        } // Закрываем внутренний Box с systemBarsPadding
+    } // Закрываем внешний Box
 }
 
 // Функции локализации

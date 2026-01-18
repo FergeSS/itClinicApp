@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import com.spbu.projecttrack.core.network.ApiConfig
 import com.spbu.projecttrack.core.network.DeviceInfo
+import com.spbu.projecttrack.core.network.NetworkSettings
 
 /**
  * Экран отладки сети для проверки IP адресов и подключения
@@ -31,6 +32,9 @@ fun NetworkDebugScreen(
             )
         }
     ) { paddingValues ->
+        var customIP by remember { mutableStateOf(NetworkSettings.customHostIP.value ?: "") }
+        val isCustomSet by NetworkSettings.customHostIP.collectAsState()
+        
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -39,6 +43,73 @@ fun NetworkDebugScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Manual IP Configuration
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "🔧 Настройка IP вручную",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Text(
+                        text = "Если автоматическое определение не работает, введите IP компьютера:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    OutlinedTextField(
+                        value = customIP,
+                        onValueChange = { customIP = it },
+                        label = { Text("IP адрес (например, 192.168.1.5)") },
+                        placeholder = { Text("192.168.1.x") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                NetworkSettings.setCustomHostIP(customIP)
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Применить")
+                        }
+                        
+                        OutlinedButton(
+                            onClick = {
+                                NetworkSettings.resetToAuto()
+                                customIP = ""
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Авто")
+                        }
+                    }
+                    
+                    if (isCustomSet != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "✅ Используется: $isCustomSet",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+            
             // API Configuration
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -50,6 +121,7 @@ fun NetworkDebugScreen(
                     
                     InfoRow("Base URL", ApiConfig.baseUrl)
                     InfoRow("Local API", if (ApiConfig.isLocalApi) "✅ Enabled" else "❌ Disabled")
+                    InfoRow("IP Source", if (NetworkSettings.isCustomIPSet()) "🔧 Manual" else "🤖 Auto")
                 }
             }
             

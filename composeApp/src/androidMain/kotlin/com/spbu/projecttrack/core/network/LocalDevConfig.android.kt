@@ -10,52 +10,124 @@ import java.net.Inet4Address
  */
 object LocalDevConfig {
     /**
-     * Fallback IP адрес (если автоопределение не сработает)
-     * TODO: Обновите на ваш текущий IP если автоопределение не работает
-     * Узнать IP: ifconfig | grep "inet " | grep -v 127.0.0.1
+     * Получить IP адрес устройства в локальной сети
      */
-    private const val FALLBACK_IP = "192.168.1.100"  // TODO: Замените на ваш IP
-    
-    /**
-     * Получить IP адрес компьютера в локальной сети
-     * Автоматически определяет текущий IP
-     */
-    fun getHostIP(): String {
+    private fun getDeviceIP(): String? {
         return try {
-            // Ищем активный сетевой интерфейс с IPv4 адресом
             val interfaces = NetworkInterface.getNetworkInterfaces()
             
             for (networkInterface in interfaces) {
-                // Пропускаем loopback и неактивные интерфейсы
                 if (networkInterface.isLoopback || !networkInterface.isUp) {
                     continue
                 }
                 
                 val addresses = networkInterface.inetAddresses
                 for (address in addresses) {
-                    // Берем только IPv4 адреса, не loopback и не link-local
                     if (address is Inet4Address && 
                         !address.isLoopbackAddress && 
                         !address.isLinkLocalAddress) {
                         val ip = address.hostAddress
                         
-                        // ВАЖНО: Пропускаем весь диапазон 10.0.2.x (это сеть эмулятора, не хост!)
+                        // Пропускаем 10.0.2.x (эмулятор)
                         if (ip != null && !ip.startsWith("10.0.2.")) {
-                            println("🌐 Автоопределение IP: $ip (интерфейс: ${networkInterface.name})")
+                            println("📱 IP устройства: $ip (${networkInterface.name})")
                             return ip
-                        } else if (ip != null) {
-                            println("⏭️  Пропущен IP эмулятора: $ip")
                         }
                     }
                 }
             }
+            null
+        } catch (e: Exception) {
+            println("❌ Ошибка получения IP устройства: ${e.message}")
+            null
+        }
+    }
+    
+    /**
+     * Получить возможные IP адреса компьютера на основе IP устройства
+     * Возвращает список IP для проверки (обычно компьютер имеет IP .1, .2, .100-110)
+     */
+    private fun getHostIPCandidates(deviceIP: String): List<String> {
+        val parts = deviceIP.split(".")
+        if (parts.size != 4) return emptyList()
+        
+        val subnet = "${parts[0]}.${parts[1]}.${parts[2]}"
+        val candidates = mutableListOf<String>()
+        
+        // Обычные адреса для компьютеров:
+        // 1. Роутер обычно .1
+        candidates.add("$subnet.1")
+        
+        // 2. Часто компьютеры получают адреса от .2 до .10
+        for (i in 2..10) {
+            candidates.add("$subnet.$i")
+        }
+        
+        // 3. Диапазон .100-110 (часто используется для статических адресов)
+        for (i in 100..110) {
+            candidates.add("$subnet.$i")
+        }
+        
+        // 4. Если IP устройства не в этих диапазонах, добавим соседние адреса
+        val deviceLastOctet = parts[3].toIntOrNull() ?: 0
+        for (offset in listOf(-2, -1, 1, 2)) {
+            val newOctet = deviceLastOctet + offset
+            if (newOctet in 2..254 && !candidates.contains("$subnet.$newOctet")) {
+                candidates.add("$subnet.$newOctet")
+            }
+        }
+        
+        println("🔍 Кандидаты IP хоста: ${candidates.take(5)}... (всего ${candidates.size})")
+        return candidates
+    }
+    
+    /**
+     * Получить IP адрес компьютера в локальной сети
+     * Автоматически определяет на основе IP устройства
+     */
+    fun getHostIP(): String {
+        return try {
+            val deviceIP = getDeviceIP()
             
-            println("⚠️  IP не найден, использую fallback: $FALLBACK_IP")
-            FALLBACK_IP
+            if (deviceIP != null) {
+                // Получаем кандидатов для проверки
+                val candidates = getHostIPCandidates(deviceIP)
+                
+                if (candidates.isNotEmpty()) {
+                    // Выбираем IP, исключая .1 (это обычно роутер, а не компьютер)
+                    // Приоритет: .2-.10, потом .100-110
+                    val selectedIP = candidates.firstOrNull { 
+                        val octet = it.split(".")[3].toIntOrNull() ?: 0
+                        octet in 2..10  // Компьютеры обычно .2-.10
+                    } ?: candidates.firstOrNull {
+                        val octet = it.split(".")[3].toIntOrNull() ?: 0
+                        octet in 100..110  // Или статические адреса
+                    } ?: candidates.first()
+                    
+                    println("✅ Выбран IP хоста: $selectedIP (на основе устройства $deviceIP)")
+                    println("💡 Если не работает, проверьте реальный IP компьютера и настройте вручную")
+                    return selectedIP
+                }
+            }
+            
+            // Fallback: .2 вместо .1 (компьютер, а не роутер)
+            val fallback = "192.168.1.2"
+            println("⚠️  Не удалось определить IP автоматически, использую $fallback")
+            println("💡 Узнайте IP компьютера: ipconfig (Windows) или ifconfig (Mac/Linux)")
+            fallback
         } catch (e: Exception) {
             println("❌ Ошибка определения IP: ${e.message}")
-            FALLBACK_IP
+            "192.168.1.2"
         }
+    }
+    
+    /**
+     * Получить список всех возможных IP для проверки
+     * Полезно для ручного подбора
+     */
+    fun getAllHostCandidates(): List<String> {
+        val deviceIP = getDeviceIP() ?: return emptyList()
+        return getHostIPCandidates(deviceIP)
     }
     
     /**

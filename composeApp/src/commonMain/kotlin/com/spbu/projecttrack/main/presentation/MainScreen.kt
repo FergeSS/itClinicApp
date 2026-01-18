@@ -16,20 +16,21 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import com.spbu.projecttrack.core.auth.AuthManager
 import com.spbu.projecttrack.core.di.DependencyContainer
-import com.spbu.projecttrack.core.theme.AppColors
 import com.spbu.projecttrack.projects.presentation.ProjectsScreen
 import org.jetbrains.compose.resources.painterResource
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import projecttrack.composeapp.generated.resources.*
 
 // Custom TabBar colors
@@ -49,8 +50,31 @@ fun MainScreen(
     var selectedTab by remember { mutableStateOf(0) }
     var showSuggestProject by remember { mutableStateOf(false) }
     val isAuthorized by AuthManager.isAuthorized.collectAsState(initial = false)
-    
+
+    MainScreenContent(
+        onProjectDetailClick = onProjectDetailClick,
+        modifier = modifier,
+        isAuthorized = isAuthorized,
+        selectedTab = selectedTab,
+        onTabSelected = { selectedTab = it },
+        showSuggestProject = showSuggestProject,
+        onShowSuggestProjectChange = { showSuggestProject = it }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainScreenContent(
+    onProjectDetailClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    isAuthorized: Boolean,
+    selectedTab: Int,
+    onTabSelected: (Int) -> Unit,
+    showSuggestProject: Boolean,
+    onShowSuggestProjectChange: (Boolean) -> Unit
+) {
     Scaffold(
+        containerColor = Color.White, // Белый фон для Scaffold
         bottomBar = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -59,29 +83,47 @@ fun MainScreen(
                 // Таббар
                 CustomTabBar(
                     selectedTab = selectedTab,
-                    onTabSelected = { selectedTab = it }
+                    onTabSelected = { onTabSelected(it) }
                 )
-                
-                // Кнопки над таббаром по оси Y, привязаны к правому краю таббара
+
+                // Кнопки над таббаром по оси Y, привязаны к правому краю таббара.
+                // Важно: "Предложить проект" всегда в одном месте; "Мой проект" при появлении рисуем выше,
+                // не влияя на позицию кнопки ниже.
                 if (selectedTab == 0) {
-                    Row(
+                    val density = LocalDensity.current
+                    var suggestBtnHeightPx by remember { mutableStateOf(0) }
+                    val suggestBtnHeightDp = if (suggestBtnHeightPx == 0) {
+                        46.dp // fallback, если высота ещё не измерена
+                    } else {
+                        with(density) { suggestBtnHeightPx.toDp() }
+                    }
+
+                    Box(
                         modifier = Modifier
                             .width(380.dp) // Ширина таббара
-                            .offset(y = (-50).dp), // Выше над таббаром
-                        horizontalArrangement = Arrangement.End
+                            .offset(y = (-95).dp), // Фиксированная позиция для кнопки "Предложить проект"
+                        contentAlignment = Alignment.TopEnd
                     ) {
-                        // Кнопка "Мой проект" (если авторизован)
+                        // Кнопка "Предложить проект" — всегда на одном месте
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .onSizeChanged { suggestBtnHeightPx = it.height }
+                        ) {
+                            com.spbu.projecttrack.projects.presentation.components.SuggestProjectButton(
+                                onClick = { onShowSuggestProjectChange(true) }
+                            )
+                        }
+
+                        // Кнопка "Мой проект" (если авторизован) — просто выше
                         if (isAuthorized) {
                             com.spbu.projecttrack.projects.presentation.components.MyProjectButton(
-                                onClick = { /* TODO: navigate to my project */ }
+                                onClick = { /* TODO: navigate to my project */ },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(y = -(suggestBtnHeightDp + 10.dp))
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
                         }
-                        
-                        // Кнопка "Предложить проект"
-                        com.spbu.projecttrack.projects.presentation.components.SuggestProjectButton(
-                            onClick = { showSuggestProject = true }
-                        )
                     }
                 }
             }
@@ -92,22 +134,30 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            val isPreview = LocalInspectionMode.current
+
             when (selectedTab) {
                 0 -> {
-                    val projectsViewModel = remember { DependencyContainer.provideProjectsViewModel() }
-                    ProjectsScreen(
-                        viewModel = projectsViewModel,
-                        onProjectClick = onProjectDetailClick
-                    )
+                    if (isPreview) {
+                        // В превью не дергаем DI/VM
+                        Box(modifier = Modifier.fillMaxSize())
+                    } else {
+                        val projectsViewModel = remember { DependencyContainer.provideProjectsViewModel() }
+                        ProjectsScreen(
+                            viewModel = projectsViewModel,
+                            onProjectClick = onProjectDetailClick
+                        )
+                    }
                 }
+
                 1 -> RankingScreen()
                 2 -> InfoScreen()
             }
-            
+
             // Алерт "Предложить проект"
             com.spbu.projecttrack.projects.presentation.components.SuggestProjectAlert(
                 isVisible = showSuggestProject,
-                onDismiss = { showSuggestProject = false },
+                onDismiss = { onShowSuggestProjectChange(false) },
                 onSubmit = { name, email ->
                     // TODO: Отправить запрос в бэк
                 }
@@ -117,7 +167,7 @@ fun MainScreen(
 }
 
 @Composable
-private fun CustomTabBar(
+internal fun CustomTabBar(
     selectedTab: Int,
     onTabSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
@@ -125,7 +175,7 @@ private fun CustomTabBar(
     val density = LocalDensity.current
     var dragOffset by remember { mutableStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
-    
+
     // Calculate animated offset for selection indicator
     val baseOffset = when (selectedTab) {
         0 -> 5.dp
@@ -133,7 +183,7 @@ private fun CustomTabBar(
         2 -> 252.dp
         else -> 5.dp
     }
-    
+
     val offsetX by animateDpAsState(
         targetValue = baseOffset + with(density) { dragOffset.toDp() },
         animationSpec = if (isDragging) tween(durationMillis = 0) else tween(durationMillis = 300)
@@ -196,11 +246,11 @@ private fun CustomTabBar(
                                 isDragging = false
                                 dragOffset = 0f
                             }
-                        ) { change, dragAmount ->
+                        ) { _, dragAmount ->
                             dragOffset += dragAmount
                             // Ограничиваем перетаскивание в пределах таббара
                             val minOffset = with(density) { -baseOffset.toPx() }
-                            val maxOffset = with(density) { 
+                            val maxOffset = with(density) {
                                 (380.dp.toPx() - baseOffset.toPx() - 123.dp.toPx())
                             }
                             dragOffset = dragOffset.coerceIn(minOffset, maxOffset)
@@ -268,7 +318,7 @@ private fun TabItem(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    
+
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 1.15f else 1f, // Увеличение на 15% при нажатии
         animationSpec = tween(durationMillis = 150)
@@ -298,4 +348,30 @@ private fun TabItem(
     }
 }
 
+@Preview(showBackground = true, name = "Main (Unauthorized)")
+@Composable
+private fun MainScreenPreview_Unauthorized() {
+    MainScreenContent(
+        onProjectDetailClick = {},
+        modifier = Modifier,
+        isAuthorized = false,
+        selectedTab = 0,
+        onTabSelected = {},
+        showSuggestProject = false,
+        onShowSuggestProjectChange = {}
+    )
+}
 
+@Preview(showBackground = true, name = "Main (Authorized)")
+@Composable
+private fun MainScreenPreview_Authorized() {
+    MainScreenContent(
+        onProjectDetailClick = {},
+        modifier = Modifier,
+        isAuthorized = true,
+        selectedTab = 0,
+        onTabSelected = {},
+        showSuggestProject = false,
+        onShowSuggestProjectChange = {}
+    )
+}

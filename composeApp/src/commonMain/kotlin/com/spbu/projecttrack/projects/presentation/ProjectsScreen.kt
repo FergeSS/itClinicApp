@@ -1,8 +1,11 @@
 package com.spbu.projecttrack.projects.presentation
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -18,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -36,8 +41,25 @@ import com.spbu.projecttrack.projects.presentation.components.SearchBar
 import com.spbu.projecttrack.projects.presentation.components.FiltersAlert
 import com.spbu.projecttrack.projects.presentation.models.ProjectFilters
 import com.spbu.projecttrack.core.theme.AppColors
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.mutableStateOf
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+
+import org.jetbrains.compose.ui.tooling.preview.Preview
+
+@Composable
+private fun openSansFamily(): FontFamily {
+    // OpenSans шрифты с разными весами
+    return FontFamily(
+        Font(Res.font.opensans_regular, weight = FontWeight.Normal),
+        Font(Res.font.opensans_medium, weight = FontWeight.Medium),
+        Font(Res.font.opensans_semibold, weight = FontWeight.SemiBold),
+        Font(Res.font.opensans_bold, weight = FontWeight.Bold)
+    )
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,12 +74,15 @@ fun ProjectsScreen(
     var filters by remember { mutableStateOf(ProjectFilters()) }
     val hasActiveFilters = filters.hasActiveFilters()
     val isAuthorized by com.spbu.projecttrack.core.auth.AuthManager.isAuthorized.collectAsState(initial = false)
-    
-    val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
+
+    val fontFamily = openSansFamily()
     val titleColor = AppColors.Color3
-    
-    Box(modifier = modifier.fillMaxSize()) {
+
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Color.White) // Белый фон на весь экран включая статус-бар
+    ) {
         // Лого СПбГУ на весь экран по ширине
         Image(
             painter = painterResource(Res.drawable.spbu_logo),
@@ -68,12 +93,11 @@ fun ProjectsScreen(
                 .alpha(0.1f), // Видимость 10%
             contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
         )
-        
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .systemBarsPadding()
-                .background(Color.White), // Белый фон
+//                .systemBarsPadding(), // Отступ для статус-бара
         ) {
             Box(
                 modifier = Modifier
@@ -85,22 +109,15 @@ fun ProjectsScreen(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "Проекты",
-                        fontFamily = openSansBold,
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 40.sp,
                         color = titleColor
                     )
-                    // Индикатор авторизации
-                    if (isAuthorized) {
-                        Text(
-                            text = "🔐 Авторизован",
-                            fontFamily = openSansRegular,
-                            fontSize = 12.sp,
-                            color = AppColors.Color3.copy(alpha = 0.7f)
-                        )
-                    }
+
                 }
             }
-            
+
             // Поиск
             Box(
                 modifier = Modifier
@@ -116,9 +133,9 @@ fun ProjectsScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             // Контент проектов
             Box(modifier = Modifier.weight(1f)) {
                 when (val state = uiState) {
@@ -136,7 +153,7 @@ fun ProjectsScreen(
                                 project.description?.contains(searchText, ignoreCase = true) == true
                             }
                         }
-                        
+
                         ProjectsContent(
                             projects = filteredProjects,
                             tags = state.tags,
@@ -154,7 +171,7 @@ fun ProjectsScreen(
                 }
             }
         }
-        
+
         // FiltersAlert
         if (uiState is ProjectsUiState.Success) {
             FiltersAlert(
@@ -229,7 +246,7 @@ private fun ProjectsContent(
     modifier: Modifier = Modifier
 ) {
     val tagMap = tags.associateBy { it.id }
-    
+
     if (projects.isEmpty()) {
         Box(
             modifier = modifier.fillMaxSize(),
@@ -258,13 +275,13 @@ private fun ProjectsContent(
                         tags = project.tags?.mapNotNull { tagMap[it] } ?: emptyList(),
                         onClick = { onProjectClick(project.slug ?: project.id) }
                     )
-                    
+
                     // Загружаем следующую страницу когда осталось 3 элемента до конца
                     if (index >= projects.size - 3 && !isLoadingMore) {
                         onLoadMore()
                     }
                 }
-                
+
                 // Индикатор загрузки внизу списка
                 if (isLoadingMore) {
                     item {
@@ -289,11 +306,8 @@ private fun ProjectCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    val openSansMedium = FontFamily(Font(Res.font.opensans_bold, FontWeight.Medium))
-    
+    val fontFamily = openSansFamily()
+
     Card(
         modifier = modifier
             .width(375.dp)
@@ -309,14 +323,14 @@ private fun ProjectCard(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(2.dp)
+                    .height(1.dp)
                     .background(AppColors.Color1)
             )
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 25.dp, vertical = 12.dp)
+                    .padding(horizontal = 0.dp, vertical = 5.dp)
             ) {
                 // Дата слева (фиксированная ширина 50dp, без паддинга слева)
                 Column(
@@ -327,21 +341,26 @@ private fun ProjectCard(
                     if (dateParts.isNotEmpty()) {
                         Text(
                             text = dateParts.first(),
-                            fontFamily = openSansBold,
+                            fontFamily = fontFamily,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 20.sp,
+                            lineHeight = 20.sp,
                             color = AppColors.Color2
                         )
                         Text(
                             text = dateParts.drop(1).joinToString(" "),
-                            fontFamily = openSansBold,
-                            fontSize = 12.sp,
-                            color = AppColors.Color2
+                            fontFamily = fontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            lineHeight = 10.sp,
+                            color = AppColors.Color2,
+                            modifier = Modifier.offset(y = (-4).dp)
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.width(12.dp))
-                
+
                 // Контент справа
                 Column(
                     modifier = Modifier.weight(1f)
@@ -354,7 +373,8 @@ private fun ProjectCard(
                     ) {
                         Text(
                             text = project.name,
-                            fontFamily = openSansBold,
+                            fontFamily = fontFamily,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 16.sp,
                             color = AppColors.Color2,
                             modifier = Modifier.weight(1f)
@@ -362,25 +382,28 @@ private fun ProjectCard(
                         // Заглушка для статусов (24x24)
                         Spacer(modifier = Modifier.size(24.dp))
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Описание (5 строк)
                     Text(
                         text = project.shortDescription ?: project.description ?: "",
-                        fontFamily = openSansRegular,
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Normal,
                         fontSize = 10.sp,
                         color = AppColors.Color2,
                         maxLines = 5,
                         overflow = TextOverflow.Ellipsis,
                         lineHeight = 12.sp
                     )
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
+
                     // Блок с 3 данными
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min),
                         horizontalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
                         // Вертикальная линия слева
@@ -390,33 +413,36 @@ private fun ProjectCard(
                                 .fillMaxHeight()
                                 .background(AppColors.Color1)
                         )
-                        
+
                         // Блок 1: Срок записи на проект (первая дата)
                         Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.Start
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(start = 10.dp, end = 10.dp),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Срок записи",
-                                fontFamily = openSansSemiBold,
+                                text = "Срок записи\nна проект",
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
+                                lineHeight = 10.sp,
                                 color = AppColors.Color2
                             )
                             Text(
-                                text = "на проект",
-                                fontFamily = openSansSemiBold,
+                                text = formatDateDots(project.dateStart),
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = AppColors.Color2
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = project.dateStart?.take(10) ?: "Не указано",
-                                fontFamily = openSansSemiBold,
-                                fontSize = 10.sp,
-                                color = AppColors.Color2
+                                lineHeight = 10.sp,
+                                color = AppColors.Color2,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        
+
                         // Вертикальная полоска
                         Box(
                             modifier = Modifier
@@ -424,33 +450,36 @@ private fun ProjectCard(
                                 .fillMaxHeight()
                                 .background(AppColors.Color1)
                         )
-                        
+
                         // Блок 2: Срок реализации проекта (вторая дата)
                         Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.Start
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(start = 10.dp, end = 10.dp),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Срок реализации",
-                                fontFamily = openSansSemiBold,
+                                text = "Срок реализации\nпроекта",
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
+                                lineHeight = 10.sp,
                                 color = AppColors.Color2
                             )
                             Text(
-                                text = "проекта",
-                                fontFamily = openSansSemiBold,
+                                text = formatDateDots(project.dateEnd),
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = AppColors.Color2
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = project.dateEnd?.take(10) ?: "Не указано",
-                                fontFamily = openSansSemiBold,
-                                fontSize = 10.sp,
-                                color = AppColors.Color2
+                                lineHeight = 10.sp,
+                                color = AppColors.Color2,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
-                        
+
                         // Вертикальная полоска
                         Box(
                             modifier = Modifier
@@ -458,57 +487,48 @@ private fun ProjectCard(
                                 .fillMaxHeight()
                                 .background(AppColors.Color1)
                         )
-                        
+
                         // Блок 3: Заказчик (во всю оставшуюся ширину)
                         Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.Start
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(start = 10.dp, end = 10.dp),
+                            horizontalAlignment = Alignment.Start,
+                            verticalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = "Заказчик",
-                                fontFamily = openSansSemiBold,
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = AppColors.Color2
+                                lineHeight = 10.sp,
+                                color = AppColors.Color2,
+                                maxLines = 1
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "Не указан", // TODO: получить из бэка
-                                fontFamily = openSansSemiBold,
+                                fontFamily = fontFamily,
+                                fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
-                                color = AppColors.Color2
+                                lineHeight = 10.sp,
+                                color = AppColors.Color2,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Теги проекта в несколько строк (высота блока 20)
-                    // Упрощенная версия - просто показываем все теги в несколько строк
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(20.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+
+                    // Теги проекта: сколько поместится в строку, дальше перенос, строк сколько угодно
+                    @OptIn(ExperimentalLayoutApi::class)
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        // Первая строка
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            tags.take(3).forEach { tag ->
-                                ProjectTagChip(tag = tag)
-                            }
-                        }
-                        // Вторая строка если есть еще теги
-                        if (tags.size > 3) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                tags.drop(3).forEach { tag ->
-                                    ProjectTagChip(tag = tag)
-                                }
-                            }
+                        tags.forEach { tag ->
+                            ProjectTagChip(tag = tag)
                         }
                     }
                 }
@@ -538,6 +558,15 @@ private fun TagChip(
 private fun formatDate(dateString: String): String {
     // Simple date formatting - можно улучшить используя kotlinx-datetime
     return dateString.take(10)
+}
+
+private fun formatDateDots(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return "Не указано"
+    val s = dateString.take(10)
+    val parts = s.split("-")
+    return if (parts.size == 3) {
+        "${parts[2]}.${parts[1]}.${parts[0]}" // yyyy-MM-dd -> dd.MM.yyyy
+    } else s
 }
 
 private fun formatDateForCard(dateString: String): List<String> {
@@ -583,8 +612,8 @@ private fun ProjectTagChip(
     tag: Tag,
     modifier: Modifier = Modifier
 ) {
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    
+    val fontFamily = openSansFamily()
+
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -593,11 +622,694 @@ private fun ProjectTagChip(
     ) {
         Text(
             text = tag.name,
-            fontFamily = openSansRegular,
+            fontFamily = fontFamily,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 10.sp,
             color = AppColors.Color2,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 0.dp)
         )
+    }
+}
+
+
+@Preview
+@Composable
+@Suppress("unused")
+private fun ProjectCardPlaygroundPreview() {
+    MaterialTheme {
+        Surface(color = Color.White) {
+            val tagsList = listOf(
+                Tag(id = "1", name = "AI"),
+                Tag(id = "2", name = "Mobile"),
+                Tag(id = "3", name = "Kotlin"),
+                Tag(id = "4", name = "Compose"),
+                Tag(id = "5", name = "Data"),
+                Tag(id = "6", name = "С++")
+            )
+
+            val project = Project(
+                id = "preview-id",
+                slug = "preview-slug",
+                name = "Анализ и прогнозирование манёвра космического аппарата (КА)",
+                shortDescription = "В современном мире сложно переоценить важность актуальной информации. Каждая компания стремится показать клиенту свои достижения и скрыть недостатки. Предположим компания А решила заказать себе спутник ретранслятор для обеспечения связи с удаленными",
+                description = null,
+                dateStart = "2025-09-08",
+                dateEnd = "2025-12-20",
+                tags = tagsList.map { it.id }
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White)
+                    .padding(16.dp)
+            ) {
+                ProjectCard(
+                    project = project,
+                    tags = tagsList,
+                    onClick = { }
+                )
+            }
+        }
+    }
+}
+
+// Превью UI компонентов (без ViewModel)
+// Превью успешного состояния со списком проектов
+@Preview
+@Composable
+private fun ProjectsListSuccessPreview() {
+    val tagsList = listOf(
+        Tag(id = "1", name = "Android"),
+        Tag(id = "2", name = "iOS"),
+        Tag(id = "3", name = "ML"),
+        Tag(id = "4", name = "Backend"),
+        Tag(id = "5", name = "Data"),
+        Tag(id = "6", name = "C++")
+    )
+
+    val sampleProjects = listOf(
+        Project(
+            id = "1",
+            slug = "cosmic-analysis",
+            name = "Анализ и прогнозирование манёвра космического аппарата (КА)",
+            shortDescription = "В современном мире сложно переоценить важность актуальной информации. Каждая компания стремится показать клиенту свои достижения и скрыть недостатки.",
+            description = null,
+            dateStart = "2025-09-08",
+            dateEnd = "2025-12-20",
+            tags = listOf("1", "3", "4")
+        ),
+        Project(
+            id = "2",
+            slug = "mobile-clinic",
+            name = "Мобильное приложение для IT-клиники СПбГУ",
+            shortDescription = "Разработка мобильного приложения для управления проектами IT-клиники СПбГУ с поддержкой Android и iOS.",
+            description = null,
+            dateStart = "2024-09-01",
+            dateEnd = "2025-06-30",
+            tags = listOf("1", "2", "4")
+        ),
+        Project(
+            id = "3",
+            slug = "data-analysis",
+            name = "Система анализа больших данных",
+            shortDescription = "Создание системы для анализа и визуализации больших объемов данных с использованием современных ML алгоритмов.",
+            description = null,
+            dateStart = "2025-02-01",
+            dateEnd = "2025-08-15",
+            tags = listOf("3", "5", "4")
+        )
+    )
+
+    val fontFamily = openSansFamily()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        // Лого СПбГУ на фоне
+        Image(
+            painter = painterResource(Res.drawable.spbu_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .alpha(0.1f),
+            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            // Заголовок
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Проекты",
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    color = AppColors.Color3
+                )
+            }
+
+            // Список проектов
+            LazyColumn(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(sampleProjects) { project ->
+                    ProjectCard(
+                        project = project,
+                        tags = tagsList.filter { it.id in (project.tags ?: emptyList()) },
+                        onClick = { }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Превью состояния загрузки
+@Preview
+@Composable
+private fun ProjectsListLoadingPreview() {
+    val fontFamily = openSansFamily()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            // Заголовок
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Проекты",
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    color = AppColors.Color3
+                )
+            }
+
+            // Индикатор загрузки
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = AppColors.Color3)
+            }
+        }
+    }
+}
+
+// Превью состояния ошибки
+@Preview
+@Composable
+private fun ProjectsListErrorPreview() {
+    val fontFamily = openSansFamily()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 16.dp)
+        ) {
+            // Заголовок
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Проекты",
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    color = AppColors.Color3
+                )
+            }
+
+            // Сообщение об ошибке
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(
+                        text = "❌",
+                        fontSize = 48.sp
+                    )
+                    Text(
+                        text = "Не удалось загрузить проекты",
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = AppColors.Color2
+                    )
+                    Text(
+                        text = "Проверьте подключение к интернету",
+                        fontFamily = fontFamily,
+                        fontSize = 14.sp,
+                        color = AppColors.Color1
+                    )
+                    Button(
+                        onClick = { },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AppColors.Color3
+                        )
+                    ) {
+                        Text("Повторить", fontFamily = fontFamily)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Превью полного экрана с поиском и фильтрами
+@Preview
+@Composable
+private fun ProjectsScreenWithSearchPreview() {
+    val fontFamily = openSansFamily()
+    
+    val tagsList = listOf(
+        Tag(id = "1", name = "Android"),
+        Tag(id = "2", name = "iOS"),
+        Tag(id = "3", name = "ML"),
+        Tag(id = "4", name = "Backend"),
+        Tag(id = "5", name = "Data"),
+        Tag(id = "6", name = "C++")
+    )
+
+    val sampleProjects = listOf(
+        Project(
+            id = "1",
+            slug = "cosmic-analysis",
+            name = "Анализ и прогнозирование манёвра космического аппарата (КА)",
+            shortDescription = "В современном мире сложно переоценить важность актуальной информации. Каждая компания стремится показать клиенту свои достижения и скрыть недостатки.",
+            description = null,
+            dateStart = "2025-09-08",
+            dateEnd = "2025-12-20",
+            tags = listOf("1", "3", "4")
+        ),
+        Project(
+            id = "2",
+            slug = "mobile-clinic",
+            name = "Мобильное приложение для IT-клиники СПбГУ",
+            shortDescription = "Разработка мобильного приложения для управления проектами IT-клиники СПбГУ с поддержкой Android и iOS.",
+            description = null,
+            dateStart = "2024-09-01",
+            dateEnd = "2025-06-30",
+            tags = listOf("1", "2", "4")
+        )
+    )
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        // Лого СПбГУ на фоне
+        Image(
+            painter = painterResource(Res.drawable.spbu_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .alpha(0.1f),
+            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+        ) {
+            // Заголовок
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(top = 0.dp, bottom = 0.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Проекты",
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp,
+                        color = AppColors.Color3
+                    )
+                    // Индикатор авторизации
+                    Text(
+                        text = "🔐 Авторизован",
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 12.sp,
+                        color = AppColors.Color3.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Поиск
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SearchBar(
+                    searchText = "космического",
+                    onSearchTextChange = { },
+                    onFilterClick = { },
+                    hasActiveFilters = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Список проектов
+            LazyColumn(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(sampleProjects) { project ->
+                    ProjectCard(
+                        project = project,
+                        tags = tagsList.filter { it.id in (project.tags ?: emptyList()) },
+                        onClick = { }
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Превью с пустым результатом поиска
+@Preview
+@Composable
+private fun ProjectsScreenEmptySearchPreview() {
+    val fontFamily = openSansFamily()
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        // Лого СПбГУ на фоне
+        Image(
+            painter = painterResource(Res.drawable.spbu_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center)
+                .alpha(0.1f),
+            contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+        ) {
+            // Заголовок
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 0.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
+                Text(
+                    text = "Проекты",
+                    fontFamily = fontFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 40.sp,
+                    color = AppColors.Color3
+                )
+            }
+
+            // Поиск
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                SearchBar(
+                    searchText = "несуществующий проект",
+                    onSearchTextChange = { },
+                    onFilterClick = { },
+                    hasActiveFilters = false,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Пустой результат
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(
+                        text = "🔍",
+                        fontSize = 64.sp
+                    )
+                    Text(
+                        text = "Проекты не найдены",
+                        fontFamily = fontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        color = AppColors.Color2
+                    )
+                    Text(
+                        text = "Попробуйте изменить поисковый запрос",
+                        fontFamily = fontFamily,
+                        fontSize = 14.sp,
+                        color = AppColors.Color1
+                    )
+                }
+            }
+        }
+    }
+}
+
+// Превью полного экрана с таббаром
+@Preview
+@Composable
+private fun ProjectsScreenWithTabBarPreview() {
+    val fontFamily = openSansFamily()
+    
+    val tagsList = listOf(
+        Tag(id = "1", name = "Android"),
+        Tag(id = "2", name = "iOS"),
+        Tag(id = "3", name = "ML"),
+        Tag(id = "4", name = "Backend")
+    )
+
+    val sampleProjects = listOf(
+        Project(
+            id = "1",
+            slug = "cosmic-analysis",
+            name = "Анализ и прогнозирование манёвра космического аппарата (КА)",
+            shortDescription = "В современном мире сложно переоценить важность актуальной информации.",
+            description = null,
+            dateStart = "2025-09-08",
+            dateEnd = "2025-12-20",
+            tags = listOf("1", "3", "4")
+        ),
+        Project(
+            id = "2",
+            slug = "mobile-clinic",
+            name = "Мобильное приложение для IT-клиники СПбГУ",
+            shortDescription = "Разработка мобильного приложения для управления проектами.",
+            description = null,
+            dateStart = "2024-09-01",
+            dateEnd = "2025-06-30",
+            tags = listOf("1", "2", "4")
+        )
+    )
+    
+    // Полный экран с Scaffold и таббаром
+    Scaffold(
+        containerColor = Color.White,
+        bottomBar = {
+            // Используем настоящий CustomTabBar из MainScreen
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                com.spbu.projecttrack.main.presentation.CustomTabBar(
+                    selectedTab = 0,
+                    onTabSelected = { }
+                )
+                
+                // Кнопки над таббаром (справа)
+                Box(
+                    modifier = Modifier
+                        .width(380.dp)
+                        .offset(y = (-95).dp),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalAlignment = Alignment.End
+                    ) {
+                        // Кнопка "Мой проект" (для авторизованных)
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(23.dp),
+                                    clip = false
+                                )
+                                .background(
+                                    color = Color(0xFFA8ADB4),
+                                    shape = RoundedCornerShape(23.dp)
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = Color(0xFFD0D5DC),
+                                    shape = RoundedCornerShape(23.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "📋",
+                                fontSize = 20.sp
+                            )
+                        }
+                        
+                        // Кнопка "Предложить проект"
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(23.dp),
+                                    clip = false
+                                )
+                                .background(
+                                    color = Color(0xFFA8ADB4),
+                                    shape = RoundedCornerShape(23.dp)
+                                )
+                                .border(
+                                    width = 2.dp,
+                                    color = Color(0xFFD0D5DC),
+                                    shape = RoundedCornerShape(23.dp)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "+",
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(Color.White)
+        ) {
+            // Лого СПбГУ на фоне
+            Image(
+                painter = painterResource(Res.drawable.spbu_logo),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center)
+                    .alpha(0.1f),
+                contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+            ) {
+                // Заголовок
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.White)
+                        .padding(top = 0.dp, bottom = 0.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Проекты",
+                            fontFamily = fontFamily,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 40.sp,
+                            color = AppColors.Color3
+                        )
+                        Text(
+                            text = "🔐 Авторизован",
+                            fontFamily = fontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = AppColors.Color3.copy(alpha = 0.7f)
+                        )
+                    }
+                }
+
+                // Поиск
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    SearchBar(
+                        searchText = "",
+                        onSearchTextChange = { },
+                        onFilterClick = { },
+                        hasActiveFilters = false,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Список проектов
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(bottom = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(sampleProjects) { project ->
+                        ProjectCard(
+                            project = project,
+                            tags = tagsList.filter { it.id in (project.tags ?: emptyList()) },
+                            onClick = { }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

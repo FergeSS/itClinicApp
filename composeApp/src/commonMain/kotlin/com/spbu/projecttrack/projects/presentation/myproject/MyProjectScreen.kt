@@ -34,7 +34,11 @@ fun MyProjectScreen(
     val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
     val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
     
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(AppColors.White) // Белый фон на весь экран включая статус-бар
+    ) {
         // Лого СПбГУ на весь экран (включая под таббаром)
         Image(
             painter = painterResource(Res.drawable.spbu_logo),
@@ -46,6 +50,7 @@ fun MyProjectScreen(
         )
         
         Scaffold(
+            containerColor = AppColors.White, // Белый фон
             topBar = {
                 TopAppBar(
                     title = {
@@ -60,8 +65,7 @@ fun MyProjectScreen(
                         containerColor = AppColors.White
                     )
                 )
-            },
-            containerColor = AppColors.White // Белый фон
+            }
         ) { paddingValues ->
             if (project == null) {
                 // Нет проекта - показываем заглушку
@@ -205,5 +209,10 @@ private fun ProjectDetailsContent(
         }
     }
 }
+
+
+
+
+
 
 

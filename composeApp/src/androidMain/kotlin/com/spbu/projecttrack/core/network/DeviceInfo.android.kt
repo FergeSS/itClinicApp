@@ -7,9 +7,14 @@ actual object DeviceInfo {
         val isEmulator = (Build.FINGERPRINT.startsWith("generic")
                 || Build.FINGERPRINT.startsWith("unknown")
                 || Build.MODEL.contains("google_sdk")
+                || Build.MODEL.contains("sdk_gphone")  // Новые эмуляторы Google
                 || Build.MODEL.contains("Emulator")
                 || Build.MODEL.contains("Android SDK built for x86")
                 || Build.MANUFACTURER.contains("Genymotion")
+                || Build.DEVICE.contains("emulator")
+                || Build.DEVICE.contains("emu64")  // ARM64 эмуляторы
+                || Build.PRODUCT.contains("sdk_gphone")  // Новые эмуляторы
+                || Build.PRODUCT.contains("sdk")
                 || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
                 || "google_sdk" == Build.PRODUCT)
         

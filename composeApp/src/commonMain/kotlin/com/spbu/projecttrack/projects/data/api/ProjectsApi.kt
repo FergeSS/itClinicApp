@@ -7,6 +7,7 @@ import com.spbu.projecttrack.projects.data.model.FindManyRequest
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 
 class ProjectsApi(private val client: HttpClient) {
@@ -16,12 +17,27 @@ class ProjectsApi(private val client: HttpClient) {
     suspend fun getProjects(page: Int = 1): Result<ProjectsResponse> {
         return try {
             val endpoint = ApiConfig.Public.PROJECT_FINDMANY
-            val response = client.post("$baseUrl$endpoint") {
+            val url = "$baseUrl$endpoint"
+            println("📡 Запрос к API: POST $url")
+            println("📦 Тело запроса: page=$page")
+            
+            val response = client.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(FindManyRequest(filters = emptyMap(), page = page))
             }
-            Result.success(response.body<ProjectsResponse>())
+            
+            val bodyText = response.bodyAsText()
+            println("✅ Статус ответа: ${response.status}")
+            println("📄 Тело ответа: ${bodyText.take(500)}...") // Первые 500 символов
+            
+            // Пытаемся распарсить
+            val parsedResponse = response.body<ProjectsResponse>()
+            println("✅ Успешно распарсено: ${parsedResponse.projects.size} проектов, ${parsedResponse.tags.size} тегов")
+            
+            Result.success(parsedResponse)
         } catch (e: Exception) {
+            println("❌ Ошибка при запросе: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

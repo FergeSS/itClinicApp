@@ -25,6 +25,7 @@ fun ProjectDetailScreen(
     val isAuthorized by com.spbu.projecttrack.core.auth.AuthManager.isAuthorized.collectAsState(initial = false)
     
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.White, // Белый фон
         topBar = {
             TopAppBar(
                 title = { 
