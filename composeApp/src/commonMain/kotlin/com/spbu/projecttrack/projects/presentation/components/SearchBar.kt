@@ -8,15 +8,21 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.focus.onFocusChanged
 import com.spbu.projecttrack.core.theme.AppColors
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
@@ -28,10 +34,12 @@ fun SearchBar(
     onSearchTextChange: (String) -> Unit,
     onFilterClick: () -> Unit,
     hasActiveFilters: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFocusChange: (Boolean) -> Unit = {}
 ) {
     val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
     val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
+    val focusManager = LocalFocusManager.current
     
     Box(
         modifier = modifier
@@ -65,12 +73,25 @@ fun SearchBar(
             BasicTextField(
                 value = searchText,
                 onValueChange = onSearchTextChange,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .onFocusChanged { focusState ->
+                        onFocusChange(focusState.isFocused)
+                    },
                 singleLine = true, // Одна строка
                 textStyle = androidx.compose.ui.text.TextStyle(
                     fontFamily = if (searchText.isEmpty()) openSansSemiBold else openSansRegular,
                     fontSize = 16.sp,
                     color = if (searchText.isEmpty()) AppColors.Color1 else AppColors.Color2
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        focusManager.clearFocus()
+                    }
                 ),
                 decorationBox = { innerTextField ->
                     if (searchText.isEmpty()) {

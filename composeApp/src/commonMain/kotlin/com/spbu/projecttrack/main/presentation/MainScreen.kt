@@ -132,7 +132,7 @@ private fun MainScreenContent(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(top = paddingValues.calculateTopPadding())
         ) {
             val isPreview = LocalInspectionMode.current
 
