@@ -32,7 +32,8 @@ data class Project(
     val dateStart: String? = null,
     val dateEnd: String? = null,
     val slug: String? = null,
-    val tags: List<String>? = null
+    val tags: List<String>? = null,
+    val client: String? = null // Заказчик
 )
 
 @Serializable
