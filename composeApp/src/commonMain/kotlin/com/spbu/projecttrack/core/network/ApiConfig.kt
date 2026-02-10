@@ -88,7 +88,6 @@ object ApiConfig {
         const val PROJECT_FINDMANY = "/project/findmany"
         const val PROJECT_DETAIL = "/project/{slug}"
         const val TAGS_ALL = "/tag"
-        const val EMAIL_SEND_REQUEST = "/email/send-request"
+        const val EMAIL_SEND_REQUEST = "/email"
     }
 }
-

@@ -1,6 +1,7 @@
 package com.spbu.projecttrack.core.di
 
 import com.spbu.projecttrack.core.network.HttpClientFactory
+import com.spbu.projecttrack.projects.data.api.ContactRequestApi
 import com.spbu.projecttrack.projects.data.api.ProjectsApi
 import com.spbu.projecttrack.projects.data.repository.ProjectsRepository
 import com.spbu.projecttrack.projects.presentation.ProjectsViewModel
@@ -11,6 +12,7 @@ object DependencyContainer {
     private val httpClient by lazy { HttpClientFactory.create() }
     
     private val projectsApi by lazy { ProjectsApi(httpClient) }
+    private val contactRequestApi by lazy { ContactRequestApi(httpClient) }
     
     private val projectsRepository by lazy { ProjectsRepository(projectsApi) }
     
@@ -21,5 +23,8 @@ object DependencyContainer {
     fun provideProjectDetailViewModel(projectId: String): ProjectDetailViewModel {
         return ProjectDetailViewModel(projectsRepository, projectId)
     }
-}
 
+    fun provideContactRequestApi(): ContactRequestApi {
+        return contactRequestApi
+    }
+}

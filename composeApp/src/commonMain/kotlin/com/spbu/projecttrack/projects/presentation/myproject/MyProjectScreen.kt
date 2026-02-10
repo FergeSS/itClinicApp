@@ -10,13 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spbu.projecttrack.core.theme.AppColors
+import com.spbu.projecttrack.core.theme.AppFonts
 import com.spbu.projecttrack.projects.data.model.Project
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import projecttrack.composeapp.generated.resources.*
 
@@ -31,9 +30,6 @@ fun MyProjectScreen(
     onBackToProjects: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -56,7 +52,8 @@ fun MyProjectScreen(
                     title = {
                         Text(
                             "Мой проект",
-                            fontFamily = openSansBold,
+                            fontFamily = AppFonts.OpenSans,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
                             color = AppColors.Color2
                         )
@@ -90,9 +87,6 @@ private fun NoProjectContent(
     onBackToProjects: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
@@ -104,14 +98,16 @@ private fun NoProjectContent(
         ) {
             Text(
                 text = "У вас пока нет проекта",
-                fontFamily = openSansSemiBold,
+                fontFamily = AppFonts.OpenSans,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 20.sp,
                 color = AppColors.Color2
             )
             
             Text(
                 text = "Вы еще не участвуете ни в одном проекте.\nПросмотрите доступные проекты и подайте заявку!",
-                fontFamily = openSansRegular,
+                fontFamily = AppFonts.OpenSans,
+                fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
                 color = AppColors.Color1,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -132,9 +128,6 @@ private fun ProjectDetailsContent(
     onBackToProjects: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -145,7 +138,8 @@ private fun ProjectDetailsContent(
         // Название проекта
         Text(
             text = project.name,
-            fontFamily = openSansBold,
+            fontFamily = AppFonts.OpenSans,
+            fontWeight = FontWeight.Bold,
             fontSize = 24.sp,
             color = AppColors.Color2
         )
@@ -154,7 +148,8 @@ private fun ProjectDetailsContent(
         project.description?.let { description ->
             Text(
                 text = description,
-                fontFamily = openSansRegular,
+                fontFamily = AppFonts.OpenSans,
+                fontWeight = FontWeight.Normal,
                 fontSize = 14.sp,
                 color = AppColors.Color2
             )
@@ -168,13 +163,15 @@ private fun ProjectDetailsContent(
             Column {
                 Text(
                     text = "Срок записи",
-                    fontFamily = openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
                     color = AppColors.Color1
                 )
                 Text(
                     text = project.dateStart ?: "—",
-                    fontFamily = openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
                     color = AppColors.Color2
                 )
@@ -183,13 +180,15 @@ private fun ProjectDetailsContent(
             Column {
                 Text(
                     text = "Срок реализации",
-                    fontFamily = openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
                     color = AppColors.Color1
                 )
                 Text(
                     text = project.dateEnd ?: "—",
-                    fontFamily = openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 14.sp,
                     color = AppColors.Color2
                 )
@@ -209,7 +208,6 @@ private fun ProjectDetailsContent(
         }
     }
 }
-
 
 
 

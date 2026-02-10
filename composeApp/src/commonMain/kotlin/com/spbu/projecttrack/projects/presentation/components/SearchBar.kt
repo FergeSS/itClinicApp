@@ -16,7 +16,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.focus.onFocusChanged
 import com.spbu.projecttrack.core.theme.AppColors
-import org.jetbrains.compose.resources.Font
+import com.spbu.projecttrack.core.theme.AppFonts
 import org.jetbrains.compose.resources.painterResource
 import projecttrack.composeapp.generated.resources.*
 
@@ -37,8 +36,6 @@ fun SearchBar(
     modifier: Modifier = Modifier,
     onFocusChange: (Boolean) -> Unit = {}
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
     val focusManager = LocalFocusManager.current
     
     Box(
@@ -80,7 +77,8 @@ fun SearchBar(
                     },
                 singleLine = true, // Одна строка
                 textStyle = androidx.compose.ui.text.TextStyle(
-                    fontFamily = if (searchText.isEmpty()) openSansSemiBold else openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = if (searchText.isEmpty()) FontWeight.SemiBold else FontWeight.Normal,
                     fontSize = 16.sp,
                     color = if (searchText.isEmpty()) AppColors.Color1 else AppColors.Color2
                 ),
@@ -97,7 +95,8 @@ fun SearchBar(
                     if (searchText.isEmpty()) {
                         Text(
                             text = "Поиск",
-                            fontFamily = openSansSemiBold,
+                            fontFamily = AppFonts.OpenSans,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                             color = AppColors.Color1
                         )
@@ -134,4 +133,3 @@ fun SearchBar(
         }
     }
 }
-

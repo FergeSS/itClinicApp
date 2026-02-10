@@ -12,7 +12,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -24,9 +23,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import com.spbu.projecttrack.core.theme.AppColors
+import com.spbu.projecttrack.core.theme.AppFonts
 import com.spbu.projecttrack.projects.data.model.Tag
 import com.spbu.projecttrack.projects.presentation.models.ProjectFilters
-import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import projecttrack.composeapp.generated.resources.*
 
@@ -95,10 +94,10 @@ fun FiltersAlert(
                     Box(
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
                         Text(
                             text = "Фильтры",
-                            fontFamily = openSansBold,
+                            fontFamily = AppFonts.OpenSans,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 24.sp,
                             color = AppColors.Color2,
                             modifier = Modifier.align(Alignment.Center)
@@ -156,10 +155,10 @@ fun FiltersAlert(
                             ),
                         contentAlignment = Alignment.Center
                     ) {
-                        val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
                         Text(
                             text = "Очистить все",
-                            fontFamily = openSansSemiBold,
+                            fontFamily = AppFonts.OpenSans,
+                            fontWeight = FontWeight.SemiBold,
                             fontSize = 10.sp,
                             color = AppColors.White
                         )
@@ -177,8 +176,6 @@ private fun TagFiltersSection(
     selectedTags: Set<String>,
     onTagsChange: (Set<String>) -> Unit
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
     var expanded by remember { mutableStateOf(false) }
     
     Column {
@@ -189,7 +186,8 @@ private fun TagFiltersSection(
         ) {
             Text(
                 text = "Теги",
-                fontFamily = openSansSemiBold,
+                fontFamily = AppFonts.OpenSans,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp,
                 color = AppColors.Black
             )
@@ -246,7 +244,8 @@ private fun TagFiltersSection(
                     } else {
                         "${selectedTags.size} выбрано"
                     },
-                    fontFamily = openSansRegular,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 15.sp,
                     color = if (selectedTags.isEmpty()) AppColors.Color1 else AppColors.Color2
                 )
@@ -303,7 +302,8 @@ private fun TagFiltersSection(
                                 
                                 Text(
                                     text = tag.name,
-                                    fontFamily = openSansRegular,
+                                    fontFamily = AppFonts.OpenSans,
+                                    fontWeight = FontWeight.Normal,
                                     fontSize = 15.sp,
                                     color = AppColors.Color1
                                 )
@@ -321,9 +321,6 @@ private fun DateFiltersSection(
     filters: ProjectFilters,
     onFiltersChange: (ProjectFilters) -> Unit
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansMedium = FontFamily(Font(Res.font.opensans_bold, FontWeight.Medium))
-    
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
@@ -362,14 +359,13 @@ private fun DateInputField(
     endDate: String?,
     onDatesChange: (String?, String?) -> Unit
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    val openSansMedium = FontFamily(Font(Res.font.opensans_bold, FontWeight.Medium))
     var showCalendar by remember { mutableStateOf(false) }
     
     Column {
         Text(
             text = label,
-            fontFamily = openSansSemiBold,
+            fontFamily = AppFonts.OpenSans,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 15.sp,
             color = AppColors.Black
         )
@@ -404,7 +400,8 @@ private fun DateInputField(
                     } else {
                         "00.00.0000 по 31.12.3000"
                     },
-                    fontFamily = if (startDate != null || endDate != null) openSansMedium else openSansMedium,
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 12.sp,
                     color = if (startDate != null || endDate != null) AppColors.Color2 else AppColors.Color1
                 )
@@ -420,4 +417,3 @@ private fun DateInputField(
         // TODO: Добавить календарь (потребуется платформо-специфичная реализация)
     }
 }
-
