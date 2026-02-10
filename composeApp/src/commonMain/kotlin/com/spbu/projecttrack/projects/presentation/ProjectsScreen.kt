@@ -160,7 +160,7 @@ fun ProjectsScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.White) // Белый фон на весь экран включая статус-бар
+            .background(Color.White)
     ) {
         // Невидимый фоновый слой для закрытия клавиатуры - самый нижний слой
         Box(
@@ -782,12 +782,12 @@ private fun createPreviewViewModel(state: ProjectsUiState): ProjectsViewModel {
 }
 
 private fun getSampleTags() = listOf(
-    Tag(id = "1", name = "Android"),
-    Tag(id = "2", name = "iOS"),
-    Tag(id = "3", name = "ML"),
-    Tag(id = "4", name = "Backend"),
-    Tag(id = "5", name = "Data"),
-    Tag(id = "6", name = "C++")
+    Tag(id = 1, name = "Android"),
+    Tag(id = 2, name = "iOS"),
+    Tag(id = 3, name = "ML"),
+    Tag(id = 4, name = "Backend"),
+    Tag(id = 5, name = "Data"),
+    Tag(id = 6, name = "C++")
 )
 
 private fun getSampleProjects() = listOf(
@@ -799,7 +799,7 @@ private fun getSampleProjects() = listOf(
         description = null,
         dateStart = "2025-09-08",
         dateEnd = "2025-12-20",
-        tags = listOf("1", "3", "4"),
+        tags = listOf(1, 3, 4),
         client = "ООО Космические технологии"
     ),
     Project(
@@ -810,7 +810,7 @@ private fun getSampleProjects() = listOf(
         description = null,
         dateStart = "2024-09-01",
         dateEnd = "2025-06-30",
-        tags = listOf("1", "2", "4"),
+        tags = listOf(1, 2, 4),
         client = "IT-клиника СПбГУ"
     ),
     Project(
@@ -821,7 +821,7 @@ private fun getSampleProjects() = listOf(
         description = null,
         dateStart = "2025-02-01",
         dateEnd = "2025-08-15",
-        tags = listOf("3", "5", "4"),
+        tags = listOf(3, 5, 4),
         client = "DataCorp"
     )
 )
@@ -833,12 +833,12 @@ private fun ProjectCardPlaygroundPreview() {
     MaterialTheme {
         Surface(color = Color.White) {
             val tagsList = listOf(
-                Tag(id = "1", name = "AI"),
-                Tag(id = "2", name = "Mobile"),
-                Tag(id = "3", name = "Kotlin"),
-                Tag(id = "4", name = "Compose"),
-                Tag(id = "5", name = "Data"),
-                Tag(id = "6", name = "С++")
+                Tag(id = 1, name = "AI"),
+                Tag(id = 2, name = "Mobile"),
+                Tag(id = 3, name = "Kotlin"),
+                Tag(id = 4, name = "Compose"),
+                Tag(id = 5, name = "Data"),
+                Tag(id = 6, name = "С++")
             )
 
             val project = Project(

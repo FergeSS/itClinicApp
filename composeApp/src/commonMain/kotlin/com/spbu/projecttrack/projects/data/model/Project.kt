@@ -1,5 +1,6 @@
 package com.spbu.projecttrack.projects.data.model
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,7 +11,7 @@ data class ProjectsResponse(
 
 @Serializable
 data class ProjectDetailResponse(
-    val project: ProjectDetail? = null,  // Одиночный проект, не массив!
+    val project: ProjectDetail? = null,
     val tags: List<Tag> = emptyList(),
     val teams: List<Team>? = null,
     val members: List<Member>? = null,
@@ -32,7 +33,7 @@ data class Project(
     val dateStart: String? = null,
     val dateEnd: String? = null,
     val slug: String? = null,
-    val tags: List<String>? = null,
+    val tags: List<Int>? = null,
     val client: String? = null // Заказчик
 )
 
@@ -45,36 +46,53 @@ data class ProjectDetail(
     val dateStart: String? = null,
     val dateEnd: String? = null,
     val slug: String? = null,
-    val tags: List<String>? = null,
+    val tags: List<Int>? = null,
     val team: String? = null,
-    val status: String? = null
+    val status: String? = null,
+    @SerialName("teamLimit")
+    val teamLimit: Int? = null,
+    val client: String? = null, // Заказчик
+
+    @SerialName("clientContact")
+    val contact: String? = null, // Контактное лицо
+
+    @SerialName("projectRequirements")
+    val requirements: List<String>? = null, // Требования проекта
+
+    @SerialName("developerRequirements")
+    val executorRequirements: List<String>? = null // Требования для исполнителей
 )
 
 @Serializable
 data class Tag(
-    val id: String,
+    val id: Int,
     val name: String,
     val description: String? = null
 )
 
 @Serializable
 data class Team(
-    val id: String,
+    val id: Int,
     val name: String,
-    val description: String? = null
+    val description: String? = null,
+    val members: List<Int>? = null,
+    val project: String? = null,
+    val administrators: List<Int>? = null,
+    val documents: List<String>? = null
 )
 
 @Serializable
 data class Member(
-    val id: String,
+    val id: Int,
     val name: String,
-    val role: String? = null
+    val role: String ? = null,
+    val isAdministrator: Boolean? = null,
+    val user: Int? = null,
+    val team: Int? = null
 )
 
 @Serializable
 data class User(
     val id: String,
-    val username: String? = null,
-    val email: String? = null
+    val name: String? = null
 )
-
