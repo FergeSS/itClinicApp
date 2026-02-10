@@ -212,14 +212,14 @@ private fun TagFiltersSection(
                         .clickable(
                             indication = null,
                             interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                            onClick = { onTagsChange(emptySet()) }
+                            onClick = { onTagsChange(emptySet<String>()) }
                         )
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(8.dp))
-        
+
         // Выпадающее меню для тегов
         Box {
             // Кнопка открытия меню
@@ -251,7 +251,7 @@ private fun TagFiltersSection(
                     color = if (selectedTags.isEmpty()) AppColors.Color1 else AppColors.Color2
                 )
             }
-            
+
             // Выпадающий список с прокруткой
             if (expanded) {
                 Box(
@@ -275,14 +275,15 @@ private fun TagFiltersSection(
                     ) {
                         items(tags.size) { index ->
                             val tag = tags[index]
+                            val tagId = tag.id.toString()
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        val newTags = if (selectedTags.contains(tag.id)) {
-                                            selectedTags - tag.id
+                                        val newTags = if (selectedTags.contains(tagId)) {
+                                            selectedTags - tagId
                                         } else {
-                                            selectedTags + tag.id
+                                            selectedTags + tagId
                                         }
                                         onTagsChange(newTags)
                                     }
@@ -291,7 +292,7 @@ private fun TagFiltersSection(
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Checkbox(
-                                    checked = selectedTags.contains(tag.id),
+                                    checked = selectedTags.contains(tagId),
                                     onCheckedChange = null, // Обрабатывается через Row clickable
                                     colors = CheckboxDefaults.colors(
                                         checkedColor = AppColors.Color2,

@@ -1,5 +1,6 @@
 package com.spbu.projecttrack
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -36,6 +37,15 @@ actual fun App() {
                 Screen.Onboarding
                 // if (preferences.isOnboardingCompleted()) Screen.Main else Screen.Onboarding
             )
+        }
+        
+        // BackHandler для обработки системного жеста "назад"
+        BackHandler(enabled = currentScreen !is Screen.Onboarding) {
+            when (currentScreen) {
+                is Screen.ProjectDetail -> currentScreen = Screen.Main
+                is Screen.Main -> currentScreen = Screen.Onboarding
+                else -> { /* На Onboarding ничего не делаем */ }
+            }
         }
         
         when (val screen = currentScreen) {
