@@ -28,7 +28,10 @@ import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import com.spbu.projecttrack.core.auth.AuthManager
 import com.spbu.projecttrack.core.di.DependencyContainer
+import com.spbu.projecttrack.core.logging.AppLog
 import com.spbu.projecttrack.projects.presentation.ProjectsScreen
+import com.spbu.projecttrack.projects.presentation.components.SuggestProjectResultAlert
+import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import projecttrack.composeapp.generated.resources.*
@@ -73,6 +76,11 @@ private fun MainScreenContent(
     showSuggestProject: Boolean,
     onShowSuggestProjectChange: (Boolean) -> Unit
 ) {
+    val contactRequestApi = remember { DependencyContainer.provideContactRequestApi() }
+    val coroutineScope = rememberCoroutineScope()
+    var submitAlert by remember { mutableStateOf<Pair<String, String>?>(null) }
+    val logTag = "SuggestProject"
+
     Scaffold(
         containerColor = Color.White, // Белый фон для Scaffold
         bottomBar = {
@@ -159,11 +167,30 @@ private fun MainScreenContent(
                 isVisible = showSuggestProject,
                 onDismiss = { onShowSuggestProjectChange(false) },
                 onSubmit = { name, email ->
-                    // TODO: Отправить запрос в бэк
+                    AppLog.d(logTag, "onSubmit: nameLen=${name.length}, emailLen=${email.length}")
+                    coroutineScope.launch {
+                        val result = contactRequestApi.sendRequest(name, email)
+                        if (result.isSuccess) {
+                            AppLog.d(logTag, "Request success")
+                            submitAlert = "Заявка отправлена" to
+                                "Мы свяжемся с вами в ближайшее время."
+                        } else {
+                            AppLog.e(logTag, "Request failed")
+                            submitAlert = "Не удалось отправить заявку" to
+                                "Попробуйте позже."
+                        }
+                    }
                 }
             )
         }
     }
+
+    SuggestProjectResultAlert(
+        isVisible = submitAlert != null,
+        title = submitAlert?.first ?: "",
+        message = submitAlert?.second ?: "",
+        onDismiss = { submitAlert = null }
+    )
 }
 
 @Composable

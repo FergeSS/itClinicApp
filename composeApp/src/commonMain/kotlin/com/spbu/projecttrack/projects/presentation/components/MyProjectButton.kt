@@ -11,12 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spbu.projecttrack.core.theme.AppColors
-import org.jetbrains.compose.resources.Font
+import com.spbu.projecttrack.core.theme.AppFonts
 import projecttrack.composeapp.generated.resources.*
 
 @Composable
@@ -24,8 +23,6 @@ fun MyProjectButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-    
     Box(
         modifier = modifier
             .wrapContentWidth() // Динамическая ширина
@@ -51,13 +48,13 @@ fun MyProjectButton(
     ) {
         Text(
             text = "Мой проект",
-            fontFamily = openSansSemiBold,
+            fontFamily = AppFonts.OpenSans,
+            fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
             color = AppColors.White
         )
     }
 }
-
 
 
 

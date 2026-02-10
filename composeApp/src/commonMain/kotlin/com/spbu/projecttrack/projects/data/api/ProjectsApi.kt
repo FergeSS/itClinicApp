@@ -37,7 +37,7 @@ class ProjectsApi(private val client: HttpClient) {
 
             val response = client.post(url) {
                 accept(ContentType.Application.Json)
-                contentType(ContentType.Application.Json)
+                header(HttpHeaders.ContentType, ContentType.Application.Json)
                 setBody(FindManyRequest(filters = emptyMap(), page = page))
             }
 
@@ -69,7 +69,7 @@ class ProjectsApi(private val client: HttpClient) {
             for (page in 1..4) {
                 val response = client.post("$baseUrl$endpoint") {
                     accept(ContentType.Application.Json)
-                    contentType(ContentType.Application.Json)
+                    header(HttpHeaders.ContentType, ContentType.Application.Json)
                     setBody(FindManyRequest(filters = emptyMap(), page = page))
                 }
                 val bodyText = response.bodyAsText()

@@ -4,30 +4,37 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.*
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Dialog
 import com.spbu.projecttrack.core.theme.AppColors
-import org.jetbrains.compose.resources.Font
+import com.spbu.projecttrack.core.theme.AppFonts
+import com.spbu.projecttrack.core.logging.AppLog
 import org.jetbrains.compose.resources.painterResource
-import projecttrack.composeapp.generated.resources.*
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import projecttrack.composeapp.generated.resources.Res
+import projecttrack.composeapp.generated.resources.close_icon
+import projecttrack.composeapp.generated.resources.spbu_logo
 
 @Composable
 fun SuggestProjectAlert(
@@ -38,222 +45,218 @@ fun SuggestProjectAlert(
 ) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+    val logTag = "SuggestProjectAlert"
+
+    LaunchedEffect(isVisible) {
+        if (isVisible) {
+            name = ""
+            email = ""
+            AppLog.d(logTag, "Opened")
+        } else {
+            AppLog.d(logTag, "Closed")
+        }
+    }
+
+    val handleDismiss = {
+        name = ""
+        email = ""
+        AppLog.d(logTag, "Dismiss")
+        onDismiss()
+    }
     
-    // Кроссфейд анимация
-    androidx.compose.animation.AnimatedVisibility(
-        visible = isVisible,
-        enter = androidx.compose.animation.fadeIn(
-            animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
-        ),
-        exit = androidx.compose.animation.fadeOut(
-            animationSpec = androidx.compose.animation.core.tween(durationMillis = 300)
-        )
+    if (!isVisible) return
+
+    Dialog(
+        onDismissRequest = handleDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Dialog(
-            onDismissRequest = onDismiss,
-            properties = DialogProperties(usePlatformDefaultWidth = false)
+        Box(
+            modifier = modifier
+                .fillMaxWidth(0.9f)
+                .widthIn(max = 340.dp)
+                .wrapContentHeight()
+                .background(
+                    color = AppColors.White,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = AppColors.Color1,
+                    shape = RoundedCornerShape(20.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 14.dp)
         ) {
-            Box(
+            Image(
+                painter = painterResource(Res.drawable.spbu_logo),
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f))
-                    .clickable(onClick = onDismiss)
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .alpha(1f)
+                    .align(Alignment.TopCenter),
+                contentScale = ContentScale.Fit
+            )
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-            Box(
-                modifier = Modifier
-                    .width(350.dp)
-                    .wrapContentHeight() // Динамическая высота
-                    .align(Alignment.Center)
-                    .clickable(enabled = false) { }
-            ) {
-                // Фон логотип СПбГУ - по центру, может обрезаться
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Заказчикам",
+                        fontFamily = AppFonts.OpenSans,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 24.sp,
+                        color = AppColors.Color2,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+
+                    Image(
+                        painter = painterResource(Res.drawable.close_icon),
+                        contentDescription = "Закрыть",
+                        modifier = Modifier
+                            .size(24.dp)
+                            .align(Alignment.CenterEnd)
+                            .clickable(onClick = handleDismiss)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Если у Вас есть запрос на сотрудничество и создание проекта, заполните онлайн-заявку. Наш представитель свяжется с вами в ближайшее время",
+                    fontFamily = AppFonts.OpenSans,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 12.sp,
+                    lineHeight = 13.sp,
+                    color = AppColors.Color1,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                CenteredTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    placeholder = "Имя"
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                CenteredTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    placeholder = "Почта"
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
+                        .width(150.dp)
+                        .height(30.dp)
                         .background(
-                            color = AppColors.White,
-                            shape = RoundedCornerShape(20.dp)
+                            color = AppColors.Color3,
+                            shape = RoundedCornerShape(15.dp)
                         )
                         .border(
-                            width = 1.dp,
-                            color = AppColors.Color1,
-                            shape = RoundedCornerShape(20.dp)
+                            width = 2.dp,
+                            color = AppColors.BorderColor,
+                            shape = RoundedCornerShape(15.dp)
+                        )
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = {
+                                val cleanedName = name.trim()
+                                val cleanedEmail = email.trim()
+                                AppLog.d(
+                                    logTag,
+                                    "Submit click: nameLen=${cleanedName.length}, emailLen=${cleanedEmail.length}"
+                                )
+                                onSubmit(cleanedName, cleanedEmail)
+                                name = ""
+                                email = ""
+                                handleDismiss()
+                            }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(Res.drawable.spbu_logo),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .alpha(0.1f), // Видимость 10%
-                        contentScale = androidx.compose.ui.layout.ContentScale.FillWidth
-                    )
-                }
-                
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                ) {
-                    // Заголовок по центру с кнопкой закрытия
-                    Box(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        val openSansBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.Bold))
-                        Text(
-                            text = "Заказчикам",
-                            fontFamily = openSansBold,
-                            fontSize = 24.sp,
-                            color = AppColors.Color2,
-                            modifier = Modifier.align(Alignment.Center)
-                        )
-                        
-                        Image(
-                            painter = painterResource(Res.drawable.close_icon),
-                            contentDescription = "Закрыть",
-                            modifier = Modifier
-                                .size(24.dp)
-                                .align(Alignment.CenterEnd)
-                                .clickable(onClick = onDismiss)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Текст
-                    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
                     Text(
-                        text = "Если у Вас есть запрос на сотрудничество и создание проекта, заполните онлайн-заявку. Наш представитель свяжется с вами в ближайшее время",
-                        fontFamily = openSansRegular,
+                        text = "Отправить",
+                        fontFamily = AppFonts.OpenSans,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 12.sp,
-                        color = AppColors.Color1,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp),
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        color = AppColors.White
                     )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Поле Имя
-                    TextFieldWithLabel(
-                        label = "Имя",
-                        value = name,
-                        onValueChange = { name = it },
-                        placeholder = "Имя"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Поле Почта
-                    TextFieldWithLabel(
-                        label = "Почта",
-                        value = email,
-                        onValueChange = { email = it },
-                        placeholder = "Почта"
-                    )
-                    
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Кнопка Отправить без затемнения
-                    val openSansSemiBold = FontFamily(Font(Res.font.opensans_bold, FontWeight.SemiBold))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .background(
-                                color = AppColors.Color3,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .border(
-                                width = 2.dp,
-                                color = AppColors.BorderColor,
-                                shape = RoundedCornerShape(20.dp)
-                            )
-                            .clickable(
-                                indication = null, // Убираем затемнение
-                                interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
-                                onClick = {
-                                    onSubmit(name, email)
-                                    onDismiss()
-                                }
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Отправить",
-                            fontFamily = openSansSemiBold,
-                            fontSize = 15.sp,
-                            color = AppColors.White
-                        )
-                    }
                 }
             }
-        }
         }
     }
 }
 
+@Preview
 @Composable
-private fun TextFieldWithLabel(
-    label: String,
+private fun SuggestProjectAlertPreview() {
+    SuggestProjectAlert(
+        isVisible = true,
+        onDismiss = {},
+        onSubmit = { _, _ -> }
+    )
+}
+
+@Composable
+private fun CenteredTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier
 ) {
-    val openSansRegular = FontFamily(Font(Res.font.opensans_bold, FontWeight.Normal))
-    
-    Column(modifier = modifier) {
-        Text(
-            text = label,
-            fontFamily = openSansRegular,
-            fontSize = 12.sp,
-            color = AppColors.Color2,
-            modifier = Modifier.padding(bottom = 4.dp)
-        )
-        
-        // Текстфилд 200x36 с полосой снизу во всю ширину 2 цвета
-        Column {
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                modifier = Modifier
-                    .width(200.dp)
-                    .height(36.dp),
-                textStyle = androidx.compose.ui.text.TextStyle(
-                    fontFamily = openSansRegular,
-                    fontSize = 12.sp,
-                    color = if (value.isEmpty()) AppColors.Color1 else AppColors.Color2
-                ),
-                decorationBox = { innerTextField ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 8.dp, vertical = 8.dp)
-                    ) {
-                        if (value.isEmpty()) {
-                            Text(
-                                text = placeholder,
-                                fontFamily = openSansRegular,
-                                fontSize = 12.sp,
-                                color = AppColors.Color1
-                            )
-                        }
+    Column(modifier = modifier.width(250.dp)) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = Modifier
+                .height(36.dp)
+                .fillMaxWidth(),
+            singleLine = true,
+            textStyle = TextStyle(
+                fontFamily = AppFonts.OpenSans,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp,
+                color = if (value.isEmpty()) AppColors.Color1 else AppColors.Color2,
+                textAlign = TextAlign.Center
+            ),
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (value.isEmpty()) {
+                        Text(
+                            text = placeholder,
+                            fontFamily = AppFonts.OpenSans,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 12.sp,
+                            color = AppColors.Color1,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         innerTextField()
                     }
                 }
-            )
-            
-            // Полоса снизу во всю ширину 2 цвета
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(AppColors.Color2)
-            )
-        }
+            }
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(AppColors.Color2)
+        )
     }
 }
-
