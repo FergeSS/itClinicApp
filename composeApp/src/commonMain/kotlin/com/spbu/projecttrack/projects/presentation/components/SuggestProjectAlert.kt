@@ -205,6 +205,38 @@ private fun SuggestProjectAlertPreview() {
     )
 }
 
+@Preview
+@Composable
+private fun CenteredTextFieldPlaceholderPreview() {
+    Box(
+        modifier = Modifier
+            .background(AppColors.White)
+            .padding(16.dp)
+    ) {
+        CenteredTextField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Имя"
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun CenteredTextFieldFilledPreview() {
+    Box(
+        modifier = Modifier
+            .background(AppColors.White)
+            .padding(16.dp)
+    ) {
+        CenteredTextField(
+            value = "Иван Иванов",
+            onValueChange = {},
+            placeholder = "Имя"
+        )
+    }
+}
+
 @Composable
 private fun CenteredTextField(
     value: String,

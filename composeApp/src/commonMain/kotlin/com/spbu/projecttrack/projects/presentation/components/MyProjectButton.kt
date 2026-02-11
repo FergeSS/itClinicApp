@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.spbu.projecttrack.core.theme.AppColors
 import com.spbu.projecttrack.core.theme.AppFonts
+import org.jetbrains.compose.ui.tooling.preview.Preview
 import projecttrack.composeapp.generated.resources.*
 
 @Composable
@@ -56,8 +57,15 @@ fun MyProjectButton(
     }
 }
 
-
-
-
-
+@Preview
+@Composable
+private fun MyProjectButtonPreview() {
+    Box(
+        modifier = Modifier
+            .background(AppColors.White)
+            .padding(16.dp)
+    ) {
+        MyProjectButton(onClick = {})
+    }
+}
 
