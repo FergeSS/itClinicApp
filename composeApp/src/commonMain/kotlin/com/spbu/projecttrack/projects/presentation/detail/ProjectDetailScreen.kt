@@ -1,5 +1,10 @@
 package com.spbu.projecttrack.projects.presentation.detail
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,19 +25,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.platform.LocalUriHandler
 import com.spbu.projecttrack.core.theme.AppColors
 import com.spbu.projecttrack.projects.data.model.*
+import com.spbu.projecttrack.projects.presentation.components.SuggestProjectButton
+import com.spbu.projecttrack.projects.presentation.util.extractGithubUrl
+import com.spbu.projecttrack.projects.presentation.util.normalizeUrl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.jetbrains.compose.resources.Font
@@ -410,6 +419,7 @@ private fun ProjectHeaderCard(
 @Composable
 private fun TeamCard(
     members: List<Member>,
+    currentUserId: Int? = null,
     modifier: Modifier = Modifier
 ) {
     val fontFamily = openSansFamily()
@@ -457,7 +467,8 @@ private fun TeamCard(
                 members.forEachIndexed { index, member ->
                     TeamMemberRow(
                         index = index + 1,
-                        member = member
+                        member = member,
+                        currentUserId = currentUserId
                     )
                     if (index < members.lastIndex) {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -472,13 +483,16 @@ private fun TeamCard(
 private fun TeamMemberRow(
     index: Int,
     member: Member,
+    currentUserId: Int? = null,
     modifier: Modifier = Modifier
 ) {
     val fontFamily = openSansFamily()
 
     // Разбиваем имя и роль (может приходить одной строкой с разделителем)
     val nameParts = member.name.split(" - ", " | ", "\n")
-    val name = nameParts.firstOrNull() ?: member.name
+    val baseName = nameParts.firstOrNull() ?: member.name
+    val isCurrentUser = currentUserId != null && member.user == currentUserId
+    val name = if (isCurrentUser && !baseName.contains("(Вы)")) "$baseName (Вы)" else baseName
     val role = member.role ?: nameParts.getOrNull(1) ?: ""
 
     Row(
@@ -626,29 +640,50 @@ private fun formatDateDots(dateString: String?): String {
 fun ProjectDetailScreen(
     viewModel: ProjectDetailViewModel,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    title: String = "Проекты",
+    showBackButton: Boolean = true,
+    showMyProjectMenu: Boolean = false,
+    onMyProjectBackToProjects: () -> Unit = {},
+    onMyProjectOpenStats: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val isAuthorized by com.spbu.projecttrack.core.auth.AuthManager.isAuthorized.collectAsState(initial = false)
+    val currentUserId by com.spbu.projecttrack.core.auth.AuthManager.currentUserId.collectAsState(initial = null)
     
     ProjectDetailScreenContent(
         uiState = uiState,
         isAuthorized = isAuthorized,
+        currentUserId = currentUserId,
         onBackClick = onBackClick,
         onRetry = { viewModel.retry() },
+        title = title,
+        showBackButton = showBackButton,
+        showMyProjectMenu = showMyProjectMenu,
+        onMyProjectBackToProjects = onMyProjectBackToProjects,
+        onMyProjectOpenStats = onMyProjectOpenStats,
         modifier = modifier
     )
 }
 
 @Composable
-private fun ProjectDetailScreenContent(
+internal fun ProjectDetailScreenContent(
     uiState: ProjectDetailUiState,
     isAuthorized: Boolean,
+    currentUserId: Int? = null,
     onBackClick: () -> Unit,
     onRetry: () -> Unit,
+    title: String = "Проекты",
+    showBackButton: Boolean = true,
+    showMyProjectMenu: Boolean = false,
+    onMyProjectBackToProjects: () -> Unit = {},
+    onMyProjectOpenStats: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val fontFamily = openSansFamily()
+    val uriHandler = LocalUriHandler.current
+    val projectDetail = (uiState as? ProjectDetailUiState.Success)?.project
+    val githubUrl = remember(projectDetail) { extractGithubUrl(projectDetail) }
     
     Box(
         modifier = modifier
@@ -682,19 +717,21 @@ private fun ProjectDetailScreenContent(
                         .padding(horizontal = 16.dp, vertical = 0.dp)
                 ) {
                     // Кнопка назад
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .size(24.dp)
-                            .clickable(onClick = onBackClick),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        BackArrowIcon()
+                    if (showBackButton) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .size(24.dp)
+                                .clickable(onClick = onBackClick),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BackArrowIcon()
+                        }
                     }
 
                     // Титул "Проекты"
                     Text(
-                        text = "Проекты",
+                        text = title,
                         fontFamily = fontFamily,
                         fontWeight = FontWeight.Bold,
                         fontSize = 40.sp,
@@ -711,12 +748,19 @@ private fun ProjectDetailScreenContent(
                         }
 
                         is ProjectDetailUiState.Success -> {
+                            val contentBottomPadding = if (showMyProjectMenu) {
+                                140.dp
+                            } else {
+                                80.dp
+                            }
                             ProjectDetailContent(
                                 project = uiState.project,
                                 tags = uiState.tags,
                                 members = uiState.members,
                                 statusText = uiState.statusText,
-                                isAuthorized = isAuthorized
+                                isAuthorized = isAuthorized,
+                                currentUserId = currentUserId,
+                                bottomPadding = contentBottomPadding
                             )
                         }
 
@@ -730,6 +774,16 @@ private fun ProjectDetailScreenContent(
 
                 }
             }
+        }
+
+        if (showMyProjectMenu) {
+            MyProjectMenu(
+                githubUrl = githubUrl,
+                onBackToProjects = onMyProjectBackToProjects,
+                onOpenGithub = { url -> uriHandler.openUri(normalizeUrl(url)) },
+                onOpenStats = onMyProjectOpenStats,
+                modifier = Modifier.fillMaxSize()
+            )
         }
     }
 }
@@ -791,6 +845,86 @@ private fun ErrorContent(
     }
 }
 
+@Composable
+private fun MyProjectMenu(
+    githubUrl: String?,
+    onBackToProjects: () -> Unit,
+    onOpenGithub: (String) -> Unit,
+    onOpenStats: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var menuBtnHeightPx by remember { mutableStateOf(0) }
+    val density = LocalDensity.current
+    val menuBaseOffset = (-95).dp
+    val menuBtnHeightDp = if (menuBtnHeightPx == 0) {
+        46.dp
+    } else {
+        with(density) { menuBtnHeightPx.toDp() }
+    }
+
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopEnd
+    ) {
+        val anchorModifier = Modifier
+            .align(Alignment.BottomEnd)
+            .offset(y = menuBaseOffset)
+            .padding(end = 16.dp)
+
+        Box(
+            modifier = anchorModifier
+                .onSizeChanged { menuBtnHeightPx = it.height }
+        ) {
+            SuggestProjectButton(
+                onClick = { expanded = !expanded },
+                text = if (expanded) "Закрыть" else "Меню"
+            )
+        }
+
+        AnimatedVisibility(
+            visible = expanded,
+            enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .offset(y = menuBaseOffset - menuBtnHeightDp - 10.dp)
+                .padding(end = 16.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                SuggestProjectButton(
+                    onClick = {
+                        expanded = false
+                        onBackToProjects()
+                    },
+                    text = "Все проекты"
+                )
+
+                if (!githubUrl.isNullOrBlank()) {
+                    SuggestProjectButton(
+                        onClick = {
+                            expanded = false
+                            onOpenGithub(githubUrl)
+                        },
+                        text = "ГитХаб"
+                    )
+                }
+
+                SuggestProjectButton(
+                    onClick = {
+                        expanded = false
+                        onOpenStats()
+                    },
+                    text = "Статистика проекта"
+                )
+            }
+        }
+    }
+}
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProjectDetailContent(
@@ -799,6 +933,8 @@ private fun ProjectDetailContent(
     members: List<Member>,
     statusText: String,
     isAuthorized: Boolean,
+    currentUserId: Int? = null,
+    bottomPadding: Dp = 80.dp,
     modifier: Modifier = Modifier
 ) {
     val fontFamily = openSansFamily()
@@ -823,7 +959,7 @@ private fun ProjectDetailContent(
                 .fillMaxSize()
                 .verticalScroll(scrollState)
                 .padding(horizontal = 21.dp)
-                .padding(top = 32.dp, bottom = 80.dp), // Увеличенный padding сверху и снизу
+                .padding(top = 32.dp, bottom = bottomPadding), // Увеличенный padding сверху и снизу
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Главная карточка с градиентом
@@ -905,7 +1041,10 @@ private fun ProjectDetailContent(
                 
                 // Команда
                 if (members.isNotEmpty()) {
-                    TeamCard(members = members)
+                    TeamCard(
+                        members = members,
+                        currentUserId = currentUserId
+                    )
                 }
             }
         }
@@ -950,7 +1089,7 @@ private fun getSampleTags() = listOf(
 )
 
 private fun getSampleMembers() = listOf(
-    Member(id = 1, name = "Студент Студентов Студентович", role = "Backend-разработчик"),
+    Member(id = 1, name = "Студент Студентов Студентович", role = "Backend-разработчик", user = 1),
     Member(id = 2, name = "Студент Студентов Студентович", role = "Frontend-разработчик"),
     Member(id = 3, name = "Студент Студентов Студентович", role = "Designer"),
     Member(id = 4, name = "Студент Студентов Студентович", role = "Project Manager")
@@ -970,6 +1109,7 @@ private fun ProjectDetailScreenPreview() {
                 statusText = "Назначена команда"
             ),
             isAuthorized = true,
+            currentUserId = 1,
             onBackClick = { },
             onRetry = { }
         )
@@ -1040,7 +1180,10 @@ private fun TeamCardPreview() {
     MaterialTheme {
         Surface(color = Color.White) {
             Box(modifier = Modifier.padding(16.dp)) {
-                TeamCard(members = getSampleMembers())
+                TeamCard(
+                    members = getSampleMembers(),
+                    currentUserId = 1
+                )
             }
         }
     }

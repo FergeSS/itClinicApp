@@ -23,7 +23,8 @@ import projecttrack.composeapp.generated.resources.*
 @Composable
 fun SuggestProjectButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    text: String = "Предложить проект"
 ) {
     Box(
         modifier = modifier
@@ -53,7 +54,7 @@ fun SuggestProjectButton(
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = "Предложить проект",
+            text = text,
             fontFamily = AppFonts.OpenSans,
             fontWeight = FontWeight.SemiBold,
             fontSize = 14.sp,
